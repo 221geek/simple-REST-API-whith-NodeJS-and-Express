@@ -1,0 +1,33 @@
+{
+  "name": "rest_api",
+  "version": "1.0.0",
+  "description": "rest api ",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/221geek/simple-REST-API-whith-NodeJS-and-Express.git"
+  },
+  "keywords": [
+    "server",
+    "rest",
+    "api",
+    "httl",
+    "booking",
+    "hotel",
+    "room"
+  ],
+  "author": "Abdoul Aziz Dione",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/221geek/simple-REST-API-whith-NodeJS-and-Express/issues"
+  },
+  "homepage": "https://github.com/221geek/simple-REST-API-whith-NodeJS-and-Express#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mysql": "^2.18.1",
+    "sequelize": "^6.3.5"
+  }
+}

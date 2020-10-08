@@ -4,7 +4,8 @@
   "description": "rest api ",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -26,8 +27,16 @@
   },
   "homepage": "https://github.com/221geek/simple-REST-API-whith-NodeJS-and-Express#readme",
   "dependencies": {
+    "bcrypt": "^5.0.0",
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
+    "express-load": "^1.1.16",
+    "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
     "sequelize": "^6.3.5"
+  },
+  "devDependencies": {
+    "eslint": "^7.10.0"
   }
 }

@@ -2,21 +2,21 @@
   "development": {
     "username": "aziz",
     "password": "root",
-    "database": "reservation_dev",
+    "database": "simple_api_development",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "test": {
     "username": "aziz",
     "password": "root",
-    "database": "reservation_test",
+    "database": "simple_api_test",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "production": {
     "username": "aziz",
     "password": "root",
-    "database": "reservation_prod",
+    "database": "simple_api_production",
     "host": "127.0.0.1",
     "dialect": "mysql"
   }

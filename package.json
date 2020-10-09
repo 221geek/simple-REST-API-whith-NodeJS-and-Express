@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/221geek/simple-REST-API-whith-NodeJS-and-Express#readme",
   "dependencies": {
+    "async": "^3.2.0",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",

@@ -1,6 +1,10 @@
 var bcrypt      = require('bcrypt');
 var models      = require('./../models');
-var jwtUtils    = require('./../utils/jwt.utils'); 
+var jwtUtils    = require('./../utils/jwt.utils');
+var asynclib    = require('async');
+
+const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const PASSWORD_REGEX = /^(?=.*\d).{4,8}$/;
 
 module.exports = {
     register: (req, res) => {
@@ -11,32 +15,65 @@ module.exports = {
         var bio         = req.body.bio
 
         if (email == null || password == null || username == null || bio == null) {
-            return res.status(400).json({ 'error': 'missing parameters '});
+            return res.status(400).json({ 'error': 'missing parameters' });
         }
 
-        models.User.findOne({
-            attributes: ['email'],
-            where: {email: email}
-        }).then((userFound) => {
-            if(!userFound) {
-                bcrypt.hash(password, 5, (err, bcryptPassword) => {
-                    var newUser = models.User.create({
-                        email: email,
-                        username: username,
-                        password: bcryptPassword,
-                        bio: bio,
-                        isAdmin: 0
-                    }).then((newUser) => {
-                        return res.status(201).json({ 'userId': newUser.id });
-                    }).catch((err) => {
-                        return res.status(500).json({ 'error': 'cannot add user' });
-                    })
+        if (username.lengh >= 13 || username.lengh <= 4) {
+            return res.status(400).json({ 'error': 'wrong username (must be length 5 - 12)' });
+        }
+
+        if (!EMAIL_REGEX.test(email)) {
+            return res.status(400).json({ 'error': 'email is not valid' });
+        }
+
+        if (!PASSWORD_REGEX.test(password)) {
+            return res.status(400).json({ 'error': 'invalid password (must lenght 4 - 8 and include 1 number ' });
+        }
+        asyncLib.waterfall([
+            (done) => {
+              models.User.findOne({
+                attributes: ['email'],
+                where: { email: email }
+              })
+              .then((userFound) => {
+                done(null, userFound);
+              })
+              .catch((err) => {
+                return res.status(500).json({ 'error': 'unable to verify user' });
+              });
+            },
+            (userFound, done) => {
+              if (!userFound) {
+                bcrypt.hash(password, 5, ( err, bcryptedPassword ) => {
+                  done(null, userFound, bcryptedPassword);
                 });
-            } else {
+              } else {
                 return res.status(409).json({ 'error': 'user already exist' });
+              }
+            },
+            (userFound, bcryptedPassword, done) => {
+              var newUser = models.User.create({
+                email: email,
+                username: username,
+                password: bcryptedPassword,
+                bio: bio,
+                isAdmin: 0
+              })
+              .then((newUser) => {
+                done(newUser);
+              })
+              .catch((err) => {
+                return res.status(500).json({ 'error': 'cannot add user' });
+              });
             }
-        }).catch ((err) => {
-            return res.status(500).json({ 'error': 'enable to verify user' });
+        ], (newUser) => {
+            if (newUser) {
+              return res.status(201).json({
+                'userId': newUser.id
+              });
+            } else {
+              return res.status(500).json({ 'error': 'cannot add user' });
+            }
         });
     },
     login: (req, res) => {
@@ -47,25 +84,43 @@ module.exports = {
             return res.status(400).json({ 'error': 'missing parameters' })
         }
 
-        models.User.findOne({
-            where: {email: email}
-        }).then((userFound) => {
-            if (userFound) {
-                bcrypt.compare(password, userFound.password, (errBcrypt, resBcrypt) => {
-                    if (resBcrypt) {
-                        return res.status(200).json({
-                            'userId': userFound.id,
-                            'token': jwtUtils.generateTokenForUser(userFound)
-                        });
-                    } else {
-                        return res.status(403).json({ 'error': 'invalid password' });
-                    }
-                })
-            }else {
-                return res.status(404).json({ 'error': 'user not found' });
+        asyncLib.waterfall([
+            (done) => {
+              models.User.findOne({
+                where: { email: email }
+              })
+              .then((userFound) => {
+                done(null, userFound);
+              })
+              .catch((err) => {
+                return res.status(500).json({ 'error': 'unable to verify user' });
+              });
+            },
+            (userFound, done) => {
+              if (userFound) {
+                bcrypt.compare(password, userFound.password, (errBycrypt, resBycrypt) => {
+                  done(null, userFound, resBycrypt);
+                });
+              } else {
+                return res.status(404).json({ 'error': 'user not exist in DB' });
+              }
+            },
+            (userFound, resBycrypt, done) => {
+              if(resBycrypt) {
+                done(userFound);
+              } else {
+                return res.status(403).json({ 'error': 'invalid password' });
+              }
             }
-        }).catch((err) => {
-            return res.status(500).json({ 'error': 'unable to verify user' });
+        ], (userFound) => {
+            if (userFound) {
+              return res.status(201).json({
+                'userId': userFound.id,
+                'token': jwtUtils.generateTokenForUser(userFound)
+              });
+            } else {
+              return res.status(500).json({ 'error': 'cannot log on user' });
+            }
         });
     }
 }

@@ -84,7 +84,7 @@ module.exports = {
             return res.status(400).json({ 'error': 'missing parameters' })
         }
 
-        asyncLib.waterfall([
+        asynclib.waterfall([
             (done) => {
               models.User.findOne({
                 where: { email: email }
@@ -122,5 +122,26 @@ module.exports = {
               return res.status(500).json({ 'error': 'cannot log on user' });
             }
         });
+    },
+    getUserProfil: (req, res) => {
+      var headerAuh = req.headers['authorization'];
+      var userId    = jwtUtils.getUserId(headerAuh);
+
+      if (userId < 0) {
+        return res.status(400).json({ 'error': 'invalid token' })
+      }
+
+      models.User.findOne({
+        attributes: ['id', 'email', 'username', 'bio'],
+        where: { id: userId }
+      }).then((user) => {
+        if (user) {
+          res.status(200).json(user)
+        } else {
+          res.status(404).json({ 'error': 'usernot found' });
+        }
+      }).catch((err) => {
+        res.status(500).json({ 'error': 'cannot fetch user' });
+      });
     }
 }

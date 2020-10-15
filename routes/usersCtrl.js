@@ -130,7 +130,6 @@ module.exports = {
       if (userId < 0) {
         return res.status(400).json({ 'error': 'invalid token' })
       }
-
       models.User.findOne({
         attributes: ['id', 'email', 'username', 'bio'],
         where: { id: userId }
@@ -142,6 +141,44 @@ module.exports = {
         }
       }).catch((err) => {
         res.status(500).json({ 'error': 'cannot fetch user' });
+      });
+    },
+    updateUserProfile: () => {
+      var headerAuh = req.headers['authorization'];
+      var userId    = jwtUtils.getUserId(headerAuh);
+
+      var bio = req.body.bio;
+
+      asynclib.waterfall([
+        (done) => {
+          models.User.findOne({
+            attributes: ['id', 'bio'],
+            where: { id: userId }
+          }).then((userFound) => {
+            done(null, userFound)
+          }).catch((err) => {
+            return res.status(500).json({ 'error': 'unable to verify user' })
+          });
+        },
+        (userFound, done) => {
+          if (userFound) {
+            userFound.update({
+              bio: (bio ? bio: userFound.bio)
+            }).then(() => {
+              done(userFound)
+            }).catch((err) => {
+              return res.status(500).json({ 'error': 'cannot update user' })
+            });
+          } else {
+            res.status.json(404).json({ 'error': 'user not found' })
+          }
+        },
+      ], (userFound) => {
+        if (userFound) {
+          return res.status(201).json(userFound)
+        } else {
+          return res.status(500).json({ 'eeor': 'cannot update user profile' })
+        }
       });
     }
 }
